@@ -1,193 +1,454 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Sourav Home Automation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0 10px 40px;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: space-between;
-    }
-    h1 {
-      margin-top: 30px;
-      font-size: 1.8rem;
-    }
-    .relay-card {
-      display: inline-block;
-      background-color: white;
-      padding: 20px;
-      margin: 15px;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 220px;
-      vertical-align: top;
-    }
-    .relay-card h2 {
-      margin-bottom: 10px;
-      font-size: 1.3rem;
-    }
-    .relay-card p {
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-    .relay-card button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      background-color: blue;
-      cursor: pointer;
-      font-size: 16px;
-      width: 90%;
-      transition: opacity 0.3s ease;
-    }
-    .relay-card button:hover {
-      opacity: 0.8;
-    }
-    #allOffBtn, #logoutBtn {
-      max-width: 300px;
-      width: 90%;
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 15px auto;
-      display: block;
-      color: white;
-      transition: opacity 0.3s ease;
-    }
-    #allOffBtn {
-      background-color: #d32f2f;
-    }
-    #allOffBtn:hover {
-      opacity: 0.8;
-    }
-    #logoutBtn {
-      background-color: #555;
-    }
-    #logoutBtn:hover {
-      opacity: 0.8;
+    :root {
+      --sky-top: #6ec3f4;
+      --sky-mid: #a8dcf0;
+      --sun: #ffd166;
+      --field-1: #8bc34a;
+      --field-2: #5b9e3d;
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-border: rgba(255, 255, 255, 0.9);
+      --panel-border-hi: #ffffff;
+      --text: #1e2a1c;
+      --text-dim: #4c5b47;
+      --accent: #3f9142;
+      --accent-dim: #2e6e30;
+      --accent-glow: rgba(63, 145, 66, 0.35);
+      --off: #cfd8c3;
+      --danger: #e85d5d;
+      --danger-glow: rgba(232, 93, 93, 0.35);
+      --radius: 16px;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
 
-    #dashboard {
-      display: none;
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background:
+        radial-gradient(circle at 85% 12%, var(--sun) 0%, rgba(255,209,102,0) 22%),
+        linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 32%, var(--field-1) 55%, var(--field-2) 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    /* soft rolling field lines */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(ellipse 60% 12% at 20% 62%, rgba(255,255,255,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 70% 14% at 80% 78%, rgba(255,255,255,0.14) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 10% at 50% 90%, rgba(255,255,255,0.12) 0%, transparent 70%);
+    }
+
+    /* drifting clouds */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.8;
+      background-image:
+        radial-gradient(ellipse 90px 30px at 12% 14%, #fff 0%, rgba(255,255,255,0) 75%),
+        radial-gradient(ellipse 60px 22px at 20% 16%, #fff 0%, rgba(255,255,255,0) 75%),
+        radial-gradient(ellipse 110px 32px at 70% 8%, #fff 0%, rgba(255,255,255,0) 75%),
+        radial-gradient(ellipse 70px 24px at 78% 10%, #fff 0%, rgba(255,255,255,0) 75%);
+    }
+
+    header.topbar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 34px 20px 10px;
+    }
+
+    header.topbar .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border: 1px solid var(--panel-border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(6px);
+    }
+
+    header.topbar .chip .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(0.8); }
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      text-align: center;
+      margin: 6px 20px 4px;
+      letter-spacing: -0.01em;
+      color: #16321a;
+      text-shadow: 0 2px 12px rgba(255,255,255,0.5);
+    }
+
+    h1 span {
+      color: var(--accent-dim);
+    }
+
+    p.subtitle {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin: 0 20px 30px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      padding: 0 16px;
+    }
+
+    /* Login card */
     #loginForm {
-      max-width: 400px;
-      margin: 80px auto 20px;
-      background: white;
-      padding: 30px 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 360px;
+      margin: 40px auto;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--panel-border);
+      padding: 34px 26px;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 50px -20px rgba(20, 50, 20, 0.35);
     }
+
+    #loginForm .form-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+
     #loginForm input {
       width: 100%;
-      padding: 12px 15px;
-      margin: 10px 0 20px;
-      font-size: 1rem;
-      border: 1.5px solid #ccc;
+      padding: 12px 14px;
+      margin: 0 0 18px;
+      font-size: 0.95rem;
+      font-family: var(--font-body);
+      color: var(--text);
+      background: #ffffff;
+      border: 1.5px solid #d7e6cf;
       border-radius: 10px;
-      box-sizing: border-box;
-      outline-offset: 2px;
-      transition: border-color 0.3s ease;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+
+    #loginForm input::placeholder { color: #97a68e; }
+
     #loginForm input:focus {
-      border-color: #1e88e5;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(63, 145, 66, 0.15);
     }
+
     #loginForm button {
       width: 100%;
-      background-color: #1e88e5;
-      color: white;
-      padding: 12px;
-      font-size: 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+      color: #f4fff2;
+      font-weight: 700;
+      padding: 13px;
+      font-size: 1rem;
+      font-family: var(--font-display);
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      letter-spacing: 0.01em;
+      transition: filter 0.2s ease, transform 0.1s ease;
     }
-    #loginForm button:hover {
-      background-color: #1565c0;
+
+    #loginForm button:hover { filter: brightness(1.08); }
+    #loginForm button:active { transform: translateY(1px); }
+
+    /* Dashboard */
+    #dashboard {
+      display: none;
+      width: 100%;
+      max-width: 980px;
+      margin: 10px auto 0;
     }
-    #dashboard .relay-container {
-      max-width: 960px;
-      margin: 20px auto 0;
+
+    .relay-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .relay-card {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+    }
+
+    .relay-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--panel-border-hi);
+    }
+
+    .relay-card.on {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 18px 30px -18px var(--accent-glow);
+    }
+
+    .relay-card .icon-wrap {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
+      background: rgba(63, 145, 66, 0.1);
+      border: 1px solid #d7e6cf;
+      margin-bottom: 14px;
+      color: var(--text-dim);
+      transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
     }
-    @media (max-width: 700px) {
-      .relay-card {
-        width: 90%;
-        margin: 10px auto;
-        display: block;
-      }
-      body {
-        padding: 0 10px 60px;
-      }
+
+    .relay-card.on .icon-wrap {
+      color: var(--accent-dim);
+      background: rgba(63, 145, 66, 0.2);
+      border-color: var(--accent);
     }
+
+    .relay-card .icon-wrap svg { width: 22px; height: 22px; }
+
+    .relay-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.08rem;
+      margin: 0 0 6px;
+      font-weight: 600;
+      color: #16321a;
+    }
+
+    .relay-card .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .relay-card .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--off);
+      flex-shrink: 0;
+      transition: background 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .relay-card.on .status-dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .relay-card button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      color: #2c3a27;
+      background-color: var(--off);
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-family: var(--font-body);
+      font-weight: 600;
+      transition: filter 0.2s ease, transform 0.1s ease;
+    }
+
+    .relay-card button:hover { filter: brightness(0.97); }
+    .relay-card button:active { transform: scale(0.98); }
+
+    /* Bottom controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 340px;
+      margin: 0 auto 40px;
+    }
+
+    #allOffBtn, #logoutBtn {
+      width: 100%;
+      padding: 13px 25px;
+      font-size: 0.95rem;
+      font-family: var(--font-display);
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #fff;
+      transition: filter 0.2s ease, transform 0.1s ease;
+    }
+
+    #allOffBtn {
+      background: linear-gradient(135deg, var(--danger), #c23a3a);
+      box-shadow: 0 10px 24px -12px var(--danger-glow);
+    }
+
+    #logoutBtn {
+      background: rgba(255,255,255,0.55);
+      color: var(--text-dim);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(6px);
+    }
+
+    #allOffBtn:hover, #logoutBtn:hover { filter: brightness(1.05); }
+    #allOffBtn:active, #logoutBtn:active { transform: translateY(1px); }
+    #logoutBtn:hover { color: var(--text); border-color: var(--panel-border-hi); }
+
     footer {
-      font-size: 0.9rem;
-      color: #666;
-      padding: 10px 0;
-      margin-top: 40px;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #2f4a2a;
+      padding: 18px 0 26px;
+      letter-spacing: 0.03em;
+    }
+
+    footer span { color: var(--accent-dim); font-weight: 600; }
+
+    @media (max-width: 480px) {
+      .relay-container { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .relay-card { padding: 16px 14px; }
     }
   </style>
 </head>
 <body>
 
-  <h1>Sourav Home Automation</h1>
+  <header class="topbar">
+    <span class="chip"><span class="pulse-dot"></span>Live Panel</span>
+  </header>
 
-  <!-- Login form -->
-  <div id="loginForm">
-    <input type="email" id="email" placeholder="Enter Email" required />
-    <input type="password" id="password" placeholder="Enter Password" required />
-    <button id="loginBtn">Login</button>
-  </div>
+  <h1>Sourav <span>Home Automation</span></h1>
+  <p class="subtitle">// remote control</p>
 
-  <!-- Dashboard -->
-  <div id="dashboard">
-    <div class="relay-container">
-      <div class="relay-card">
-        <h2>Office Light</h2>
-        <p>Status: <span id="status1">Loading...</span></p>
-        <button id="btn1">Switch</button>
-      </div>
-
-      <div class="relay-card">
-        <h2>Computer</h2>
-        <p>Status: <span id="status2">Loading...</span></p>
-        <button id="btn2">Switch</button>
-      </div>
-
-      <div class="relay-card">
-        <h2>Printer</h2>
-        <p>Status: <span id="status3">Loading...</span></p>
-        <button id="btn3">Switch</button>
-      </div>
-
-      <div class="relay-card">
-        <h2>Relay 4</h2>
-        <p>Status: <span id="status4">Loading...</span></p>
-        <button id="btn4">Switch</button>
-      </div>
+  <main>
+    <!-- Login form -->
+    <div id="loginForm">
+      <label class="form-label">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" required />
+      <label class="form-label">Password</label>
+      <input type="password" id="password" placeholder="••••••••" required />
+      <button id="loginBtn">Login</button>
     </div>
 
-    <button id="allOffBtn">All OFF</button>
-    <button id="logoutBtn">Logout</button>
-  </div>
+    <!-- Dashboard -->
+    <div id="dashboard">
+      <div class="relay-container">
+        <div class="relay-card" data-card="1">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.2 1 2V17h6v-.3c0-.8.4-1.6 1-2A7 7 0 0 0 12 2Z"/></svg>
+          </div>
+          <h2>Office Light</h2>
+          <div class="status-row"><span class="status-dot"></span>Status: <span id="status1">Loading...</span></div>
+          <button id="btn1">Toggle</button>
+        </div>
 
-  <footer>
-    This Project Created by Sourav
-  </footer>
+        <div class="relay-card" data-card="2">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h2>Computer</h2>
+          <div class="status-row"><span class="status-dot"></span>Status: <span id="status2">Loading...</span></div>
+          <button id="btn2">Toggle</button>
+        </div>
+
+        <div class="relay-card" data-card="3">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
+          </div>
+          <h2>Printer</h2>
+          <div class="status-row"><span class="status-dot"></span>Status: <span id="status3">Loading...</span></div>
+          <button id="btn3">Toggle</button>
+        </div>
+
+        <div class="relay-card" data-card="4">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/><path d="M8 14.5v-3M16 14.5v-3"/></svg>
+          </div>
+          <h2>3D Printer</h2>
+          <div class="status-row"><span class="status-dot"></span>Status: <span id="status4">Loading...</span></div>
+          <button id="btn4">Toggle</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="allOffBtn">All OFF</button>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>This project created by <span>Sourav</span></footer>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -196,16 +457,16 @@
 
   <script>
     // Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDlHroBw6PIBzaVq1Mc8cjU-YDBfyENL5o",
-  authDomain: "souravmandall.firebaseapp.com",
-  databaseURL: "https://souravmandall-default-rtdb.firebaseio.com",
-  projectId: "souravmandall",
-  storageBucket: "souravmandall.firebasestorage.app",
-  messagingSenderId: "761413007750",
-  appId: "1:761413007750:web:0af76489ac21ae93de9407",
-  measurementId: "G-MX3EHRP7GJ"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlHroBw6PIBzaVq1Mc8cjU-YDBfyENL5o",
+      authDomain: "souravmandall.firebaseapp.com",
+      databaseURL: "https://souravmandall-default-rtdb.firebaseio.com",
+      projectId: "souravmandall",
+      storageBucket: "souravmandall.firebasestorage.app",
+      messagingSenderId: "761413007750",
+      appId: "1:761413007750:web:0af76489ac21ae93de9407",
+      measurementId: "G-MX3EHRP7GJ"
+    };
 
     firebase.initializeApp(firebaseConfig);
 
@@ -247,12 +508,15 @@ const firebaseConfig = {
       relays.forEach(relay => {
         const statusText = document.getElementById(`status${relay.id}`);
         const toggleButton = document.getElementById(`btn${relay.id}`);
+        const card = document.querySelector(`.relay-card[data-card="${relay.id}"]`);
         const relayRef = db.ref("/" + relay.path);
 
         relayRef.on("value", (snapshot) => {
           const state = snapshot.val();
           statusText.innerText = state ? "ON" : "OFF";
-          toggleButton.style.backgroundColor = state ? "green" : "blue";
+          toggleButton.style.backgroundColor = state ? "#3f9142" : "";
+          toggleButton.style.color = state ? "#f4fff2" : "";
+          if (card) card.classList.toggle("on", !!state);
         });
 
         toggleButton.onclick = () => {
@@ -284,4 +548,3 @@ const firebaseConfig = {
   </script>
 </body>
 </html>
-
